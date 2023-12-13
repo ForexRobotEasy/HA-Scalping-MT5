@@ -1,0 +1,63 @@
+
+//+------------------------------------------------------------------+
+//|                                                  HA Scalping MT5 |
+//|                        https://www.forexroboteasy.com             |
+//|                                                 Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+
+//--- Include necessary libraries
+#include <Trade\Trade.mqh>
+
+//--- Define variables
+input string EA_Name = 'HA Scalping MT5';
+input string Developer_Site = 'https://www.forexroboteasy.com';
+CTrade trade; // Trade class object
+
+//--- Expert Advisor initialization function
+int OnInit()
+{
+   //--- Set trade parameters
+   trade.SetExpertMagicNumber(123456); // Magic number for the EA
+   trade.SetSlippage(3); // Maximum allowed slippage
+   trade.SetDeviation(5); // Maximum deviation from requested price
+
+   //--- Set optimization parameters
+   trade.SetOptimizationMode(1); // Optimization mode: slow complete algorithm
+
+   return(INIT_SUCCEEDED);
+}
+
+//--- Expert Advisor start function
+void OnTick()
+{
+   //--- Check if the current symbol is supported
+   if (Symbol() != 'EURUSD' && Symbol() != 'USDJPY')
+      return;
+
+   //--- Check if the current timeframe is supported
+   if (Period() != PERIOD_M15)
+      return;
+
+   //--- Calculate the entry and stop levels
+   double entryLevel = SymbolInfoDouble(Symbol(), SYMBOL_ASK) + 10 * SymbolInfoDouble(Symbol(), SYMBOL_POINT);
+   double stopLevel = SymbolInfoDouble(Symbol(), SYMBOL_BID) - 20 * SymbolInfoDouble(Symbol(), SYMBOL_POINT);
+
+   //--- Place entry stop order
+   trade.BuyStop(0.1, entryLevel, stopLevel, 0, 0, 0);
+
+   //--- Adjust trailing stop level as the trade progresses
+   if (trade.PositionSelect(Symbol()) && trade.PositionType() == POSITION_TYPE_BUY)
+   {
+      double trailingStopLevel = SymbolInfoDouble(Symbol(), SYMBOL_BID) - 10 * SymbolInfoDouble(Symbol(), SYMBOL_POINT);
+      trade.PositionModify(trade.PositionTicket(), 0, trailingStopLevel);
+   }
+}
+
+//--- Expert Advisor deinitialization function
+void OnDeinit(const int reason)
+{
+   //--- Cleanup
+   trade.Cleanup();
+}
+
+//--- End of code
